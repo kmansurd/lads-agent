@@ -65,9 +65,21 @@ const Sidebar = () => {
   const [apiUrlDraft, setApiUrlDraft] = useState('');
   const [apiUrlError, setApiUrlError] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
+  const [genAiKeyDraft, setGenAiKeyDraft] = useState('');
+  const [showGenAiKey, setShowGenAiKey] = useState(false);
   const { courses, courseId, setCourseId, loading } = useCourse();
-  const { savedToken, savedApiUrl, hasSavedToken, saveToken, saveApiUrl, clearToken } =
-    useCanvasAuth();
+  const {
+    savedToken,
+    savedApiUrl,
+    hasSavedToken,
+    savedGenAiApiKey,
+    hasSavedGenAiApiKey,
+    saveToken,
+    saveApiUrl,
+    clearToken,
+    saveGenAiApiKey,
+    clearGenAiApiKey,
+  } = useCanvasAuth();
   const { view, setView } = useNavigation();
   const { mode: themeMode, setMode: setThemeMode } = useColorMode();
 
@@ -78,6 +90,10 @@ const Sidebar = () => {
   useEffect(() => {
     setApiUrlDraft(savedApiUrl);
   }, [savedApiUrl]);
+
+  useEffect(() => {
+    setGenAiKeyDraft(savedGenAiApiKey);
+  }, [savedGenAiApiKey]);
 
   const handleSettingsClick = () => {
     if (collapsed) {
@@ -100,11 +116,13 @@ const Sidebar = () => {
       return;
     }
     saveToken(tokenDraft);
+    saveGenAiApiKey(genAiKeyDraft);
   };
 
   const tokenDirty = tokenDraft.trim() !== savedToken;
   const apiUrlDirty = apiUrlDraft.trim().replace(/\/$/, '') !== savedApiUrl;
-  const settingsDirty = tokenDirty || apiUrlDirty;
+  const genAiKeyDirty = genAiKeyDraft.trim() !== savedGenAiApiKey;
+  const settingsDirty = tokenDirty || apiUrlDirty || genAiKeyDirty;
   const sidebarWidth = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
 
   const navButton = (id: CourseView, label: string, indent = false) => {
@@ -286,22 +304,53 @@ const Sidebar = () => {
                   ),
                 }}
               />
-              <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
-                URL and token are stored only in this browser. They are sent with each request and never
-                saved on the server.
+              <Typography variant="caption" color="text.secondary">
+                HKUST GenAI API key (Data Storyteller)
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                size="small"
+                fullWidth
+                type={showGenAiKey ? 'text' : 'password'}
+                placeholder="From HKUST API Developer Portal"
+                value={genAiKeyDraft}
+                onChange={(e) => setGenAiKeyDraft(e.target.value)}
+                autoComplete="off"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowGenAiKey(!showGenAiKey)}
+                        aria-label={showGenAiKey ? 'Hide GenAI key' : 'Show GenAI key'}
+                        edge="end"
+                      >
+                        {showGenAiKey ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.4 }}>
+                Canvas URL, Canvas token, and GenAI key stay in this browser. They are sent with requests
+                and are not saved on the server (optional server env fallbacks for local dev).
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 <Button
                   variant="contained"
                   size="small"
                   onClick={handleSaveSettings}
-                  disabled={!settingsDirty && !hasSavedToken}
+                  disabled={!settingsDirty && !hasSavedToken && !hasSavedGenAiApiKey}
                 >
-                  {settingsDirty ? 'Save settings' : hasSavedToken ? 'Saved' : 'Save settings'}
+                  {settingsDirty ? 'Save settings' : hasSavedToken || hasSavedGenAiApiKey ? 'Saved' : 'Save settings'}
                 </Button>
                 {hasSavedToken && (
                   <Button size="small" color="inherit" onClick={() => clearToken()}>
-                    Clear
+                    Clear Canvas
+                  </Button>
+                )}
+                {hasSavedGenAiApiKey && (
+                  <Button size="small" color="inherit" onClick={() => clearGenAiApiKey()}>
+                    Clear GenAI
                   </Button>
                 )}
               </Box>

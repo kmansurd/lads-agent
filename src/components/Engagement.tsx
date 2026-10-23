@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -58,6 +58,10 @@ import {
   parseIsoDateLocal,
 } from '@/lib/canvas/engagementRange';
 import { toIsoDateUtc } from '@/lib/canvas/courseTimeline';
+import {
+  readStoredEngagementCsv,
+  writeStoredEngagementCsv,
+} from '@/lib/client/engagementCsvStorage';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -139,21 +143,58 @@ const Engagement = () => {
   const [resourceRows, setResourceRows] = useState<ResourceCsvRow[]>([]);
   const [resourceFileName, setResourceFileName] = useState('');
   const [resourceError, setResourceError] = useState<string | null>(null);
+  const skipCsvPersistRef = useRef(false);
 
   useEffect(() => {
+    skipCsvPersistRef.current = true;
     setSemesterStartIso('');
     setStartIdx(0);
     setEndIdx(0);
     setMaxDayIndex(0);
-    setChartRows([]);
-    setChartFileName('');
     setChartError(null);
-    setChartFilter('All Sections');
-    setResourceRows([]);
-    setResourceFileName('');
     setResourceError(null);
-    setActivityTab('api');
+
+    const stored = readStoredEngagementCsv(courseId);
+    if (stored) {
+      setActivityTab(stored.activityTab);
+      setChartRows(stored.chartRows);
+      setChartFileName(stored.chartFileName);
+      setChartFilter(stored.chartFilter || 'All Sections');
+      setResourceRows(stored.resourceRows);
+      setResourceFileName(stored.resourceFileName);
+    } else {
+      setChartRows([]);
+      setChartFileName('');
+      setChartFilter('All Sections');
+      setResourceRows([]);
+      setResourceFileName('');
+      setActivityTab('api');
+    }
   }, [courseId]);
+
+  useEffect(() => {
+    if (!courseId) return;
+    if (skipCsvPersistRef.current) {
+      skipCsvPersistRef.current = false;
+      return;
+    }
+    writeStoredEngagementCsv(courseId, {
+      activityTab,
+      chartRows,
+      chartFileName,
+      resourceRows,
+      resourceFileName,
+      chartFilter,
+    });
+  }, [
+    courseId,
+    activityTab,
+    chartRows,
+    chartFileName,
+    resourceRows,
+    resourceFileName,
+    chartFilter,
+  ]);
 
   useEffect(() => {
     if (!data) return;

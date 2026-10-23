@@ -12,7 +12,9 @@ npm install
 
 2. Optional server fallback: copy [canvas.env.template](./canvas.env.template) to `.env.local` and set `CANVAS_API_TOKEN` (dev-only) and/or `CANVAS_API_URL`. In the app, **Settings** defaults the Canvas API URL to `https://canvas.ust.hk/api/v1` and lets you change it; paste your personal access token there (browser-only).
 
-3. Run the dev server:
+3. **Data Storyteller (HKUST GenAI):** subscribe to [HKUST GenAI](https://itso.hkust.edu.hk/services/it-infrastructure/hkust-genai-api-service) on the [API Developer Portal](https://hkust.developer.azure-api.net/), then paste your API key under **Settings**. The app calls `POST /api/storyteller/chat`, which proxies to `https://hkust.azure-api.net/hkust-genai/v1/chat/completions` with your tab’s Canvas analytics snapshot in the system prompt. Optional dev fallback: `HKUST_GENAI_API_KEY` in `.env.local`.
+
+4. Run the dev server:
 
 ```bash
 npm run dev

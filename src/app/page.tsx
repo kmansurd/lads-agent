@@ -68,7 +68,7 @@ function Dashboard() {
           </CourseShell>
         </Box>
       </Box>
-      <ChatBubble currentTab={viewLabel(view)} />
+      <ChatBubble currentTab={viewLabel(view)} view={view} />
     </Box>
   );
 }
